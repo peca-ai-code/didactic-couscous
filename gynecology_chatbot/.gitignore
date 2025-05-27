@@ -24,3 +24,47 @@ __pycache__/
 *.whl
 *.egg-info
 *.DS_Store
+# Logs
+logs/
+*.log
+
+# Database
+*.sqlite3
+*.db
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+.docker/
+
+# Node modules (if any)
+node_modules/
