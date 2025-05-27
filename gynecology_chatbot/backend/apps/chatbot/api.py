@@ -5,7 +5,12 @@ import google.generativeai as genai
 from django.conf import settings
 
 # Configure API clients
-openai.api_key = settings.OPENAI_API_KEY
+if settings.OPENAI_API_KEY:
+    # Use the newer OpenAI client initialization
+    openai_client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+else:
+    openai_client = None
+
 if settings.GEMINI_API_KEY:
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
@@ -17,7 +22,7 @@ async def get_openai_response(user_message, chat_history=None):
 
 def get_openai_response_sync(user_message, chat_history=None):
     """Synchronous version for OpenAI response"""
-    if not settings.OPENAI_API_KEY:
+    if not settings.OPENAI_API_KEY or not openai_client:
         print("OpenAI API key is missing!")
         return "Error: OpenAI API key not configured."
     
@@ -34,9 +39,8 @@ def get_openai_response_sync(user_message, chat_history=None):
         # Add current user message
         messages.append({"role": "user", "content": user_message})
         
-        # Call OpenAI API
-        client = openai.Client(api_key=settings.OPENAI_API_KEY)  # Use sync client
-        response = client.chat.completions.create(
+        # Call OpenAI API with the newer client
+        response = openai_client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
             max_tokens=500,

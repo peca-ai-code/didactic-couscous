@@ -10,7 +10,6 @@ import uuid
 import google.generativeai as genai
 import webbrowser
 
-
 # Load environment variables
 load_dotenv()
 
@@ -179,4 +178,12 @@ async def on_chat_end():
 async def on_book_appointment(action):
     """Handle booking appointment button click."""
     appointments_url = "http://localhost:9000/appointments/"
-    webbrowser.open(appointments_url)
+    try:
+        webbrowser.open(appointments_url)
+        await cl.Message(
+            content="Opening appointment booking page in your browser..."
+        ).send()
+    except Exception as e:
+        await cl.Message(
+            content=f"Could not open browser automatically. Please visit: {appointments_url}"
+        ).send()
