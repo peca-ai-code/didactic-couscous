@@ -24,4 +24,3 @@ __pycache__/
 *.whl
 *.egg-info
 *.DS_Store
-*.md
