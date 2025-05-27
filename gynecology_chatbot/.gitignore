@@ -68,3 +68,6 @@ dist/
 
 # Node modules (if any)
 node_modules/
+
+# Miscellaneous
+torun.md
