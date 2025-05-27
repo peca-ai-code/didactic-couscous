@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WomanCare - Gynecologist Appointments</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Main app using React hooks
+        const App = () => {
+            // States
+            const [doctors, setDoctors] = React.useState([]);
+            const [searchQuery, setSearchQuery] = React.useState('');
+            const [filteredDoctors, setFilteredDoctors] = React.useState([]);
+            const [selectedDoctor, setSelectedDoctor] = React.useState(null);
+            const [selectedDate, setSelectedDate] = React.useState(null);
+            const [selectedTime, setSelectedTime] = React.useState(null);
+            const [showConfirmation, setShowConfirmation] = React.useState(false);
+            const [isBooked, setIsBooked] = React.useState(false);
+            const [showFilters, setShowFilters] = React.useState(false);
+            const [sortOption, setSortOption] = React.useState('default');
+            const [filters, setFilters] = React.useState({
+                specialty: 'all',
+                minRating: 0,
+                minExperience: 0,
+                maxPrice: 3000
+            });
+            
+            // Generate 2 weeks of available dates from tomorrow
+            const getAvailableDates = () => {
+                const dates = [];
+                const today = new Date();
+                
+                for (let i = 1; i <= 14; i++) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() + i);
+                    dates.push(date.toISOString().split('T')[0]);
+                }
+                
+                return dates;
+            };
+            
+            // Generate time slots from 9am to 5pm
+            const getTimeSlots = () => {
+                const slots = [];
+                for (let h = 9; h <= 17; h++) {
+                    slots.push(`${h}:00`);
+                    slots.push(`${h}:30`);
+                }
+                return slots;
+            };
+            
+            // Get unique specialties from doctors
+            const getSpecialties = () => {
+                const specialties = new Set(doctors.map(doctor => doctor.specialty));
+                return ['all', ...Array.from(specialties)];
+            };
+            
+            // Initialize doctors data
+            React.useEffect(() => {
+                // More comprehensive doctor data - 30 doctors total
+                const doctorsData = [
+                    {
+                        id: 1,
+                        name: "Dr. Priya Sharma",
+                        rating: 4.8,
+                        experience: 12,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), AIIMS",
+                        specialty: "General Gynecology",
+                        price: 1800,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 2,
+                        name: "Dr. Anjali Desai",
+                        rating: 4.9,
+                        experience: 15,
+                        qualification: "MBBS, DNB (Obstetrics & Gynecology)",
+                        specialty: "Obstetrics & Gynecology",
+                        price: 2000,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 3,
+                        name: "Dr. Sarika Patel",
+                        rating: 4.7,
+                        experience: 10,
+                        qualification: "MBBS, MS (Obstetrics & Gynecology), PGIMER",
+                        specialty: "Fertility Specialist",
+                        price: 2200,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 4,
+                        name: "Dr. Divya Joshi",
+                        rating: 4.6,
+                        experience: 8,
+                        qualification: "MBBS, MD (Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1600,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 5,
+                        name: "Dr. Kavita Singh",
+                        rating: 4.9,
+                        experience: 20,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Gynecologic Oncology",
+                        price: 2500,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 6,
+                        name: "Dr. Meera Reddy",
+                        rating: 4.5,
+                        experience: 7,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "Obstetrics & Gynecology",
+                        price: 1500,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 7,
+                        name: "Dr. Neha Kapoor",
+                        rating: 4.8,
+                        experience: 11,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Urogynecology",
+                        price: 1900,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 8,
+                        name: "Dr. Sunita Agarwal",
+                        rating: 4.7,
+                        experience: 14,
+                        qualification: "MBBS, DNB (Obstetrics & Gynecology)",
+                        specialty: "Maternal-Fetal Medicine",
+                        price: 2100,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 9,
+                        name: "Dr. Ananya Chatterjee",
+                        rating: 4.4,
+                        experience: 6,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1400,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 10,
+                        name: "Dr. Deepika Malhotra",
+                        rating: 4.9,
+                        experience: 17,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Reproductive Endocrinology",
+                        price: 2300,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 11,
+                        name: "Dr. Kiran Bajaj",
+                        rating: 4.8,
+                        experience: 16,
+                        qualification: "MBBS, MS (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Fertility Specialist",
+                        price: 2200,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 12,
+                        name: "Dr. Jyoti Mishra",
+                        rating: 4.6,
+                        experience: 9,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1700,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 13,
+                        name: "Dr. Ritu Agarwal",
+                        rating: 4.7,
+                        experience: 12,
+                        qualification: "MBBS, DNB (Obstetrics & Gynecology)",
+                        specialty: "Obstetrics & Gynecology",
+                        price: 1900,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 14,
+                        name: "Dr. Lakshmi Venkatesh",
+                        rating: 4.5,
+                        experience: 8,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Maternal-Fetal Medicine",
+                        price: 1600,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 15,
+                        name: "Dr. Aruna Sharma",
+                        rating: 4.3,
+                        experience: 5,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1300,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 16,
+                        name: "Dr. Pooja Shah",
+                        rating: 4.8,
+                        experience: 14,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Gynecologic Oncology",
+                        price: 2000,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 17,
+                        name: "Dr. Shikha Gupta",
+                        rating: 4.9,
+                        experience: 18,
+                        qualification: "MBBS, MS (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Reproductive Endocrinology",
+                        price: 2400,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 18,
+                        name: "Dr. Kritika Banerjee",
+                        rating: 4.7,
+                        experience: 11,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Fertility Specialist",
+                        price: 1900,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 19,
+                        name: "Dr. Veena Nair",
+                        rating: 4.5,
+                        experience: 9,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1700,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 20,
+                        name: "Dr. Reena Singh",
+                        rating: 4.8,
+                        experience: 13,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Pediatric & Adolescent Gynecology",
+                        price: 1950,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 21,
+                        name: "Dr. Radhika Mehta",
+                        rating: 4.6,
+                        experience: 10,
+                        qualification: "MBBS, DNB (Obstetrics & Gynecology)",
+                        specialty: "Urogynecology",
+                        price: 1800,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 22,
+                        name: "Dr. Alisha Sharma",
+                        rating: 4.4,
+                        experience: 7,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1500,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 23,
+                        name: "Dr. Manisha Agarwal",
+                        rating: 4.7,
+                        experience: 12,
+                        qualification: "MBBS, MS (Obstetrics & Gynecology)",
+                        specialty: "Obstetrics & Gynecology",
+                        price: 1800,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 24,
+                        name: "Dr. Tanya Malhotra",
+                        rating: 4.9,
+                        experience: 16,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), AIIMS",
+                        specialty: "Maternal-Fetal Medicine",
+                        price: 2200,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 25,
+                        name: "Dr. Sonia Trivedi",
+                        rating: 4.3,
+                        experience: 6,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "General Gynecology",
+                        price: 1400,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 26,
+                        name: "Dr. Prerna Patel",
+                        rating: 4.6,
+                        experience: 10,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Pediatric & Adolescent Gynecology",
+                        price: 1750,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 27,
+                        name: "Dr. Shalini Chakraborty",
+                        rating: 4.8,
+                        experience: 15,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology), PGIMER",
+                        specialty: "Gynecologic Oncology",
+                        price: 2100,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 28,
+                        name: "Dr. Bhavna Singh",
+                        rating: 4.7,
+                        experience: 11,
+                        qualification: "MBBS, DNB (Obstetrics & Gynecology)",
+                        specialty: "Fertility Specialist",
+                        price: 1850,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 29,
+                        name: "Dr. Sangeeta Bajaj",
+                        rating: 4.5,
+                        experience: 9,
+                        qualification: "MBBS, DGO (Obstetrics & Gynecology)",
+                        specialty: "Obstetrics & Gynecology",
+                        price: 1700,
+                        image: "/api/placeholder/300/300"
+                    },
+                    {
+                        id: 30,
+                        name: "Dr. Radhika Mishra",
+                        rating: 4.8,
+                        experience: 14,
+                        qualification: "MBBS, MD (Obstetrics & Gynecology)",
+                        specialty: "Reproductive Endocrinology",
+                        price: 2000,
+                        image: "/api/placeholder/300/300"
+                    }
+                ];
+                
+                setDoctors(doctorsData);
+                setFilteredDoctors(doctorsData);
+            }, []);
+            
+            // Apply filters and sorting
+            React.useEffect(() => {
+                // First apply filters
+                let filtered = doctors.filter(doctor => {
+                    // Filter by search query
+                    if (searchQuery && !doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+                        !doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        return false;
+                    }
+                    
+                    // Filter by specialty
+                    if (filters.specialty !== 'all' && doctor.specialty !== filters.specialty) {
+                        return false;
+                    }
+                    
+                    // Filter by rating
+                    if (doctor.rating < filters.minRating) {
+                        return false;
+                    }
+                    
+                    // Filter by experience
+                    if (doctor.experience < filters.minExperience) {
+                        return false;
+                    }
+                    
+                    // Filter by price
+                    if (doctor.price > filters.maxPrice) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+                
+                // Then apply sorting
+                if (sortOption === 'rating') {
+                    filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+                } else if (sortOption === 'experience') {
+                    filtered = [...filtered].sort((a, b) => b.experience - a.experience);
+                } else if (sortOption === 'price_low') {
+                    filtered = [...filtered].sort((a, b) => a.price - b.price);
+                } else if (sortOption === 'price_high') {
+                    filtered = [...filtered].sort((a, b) => b.price - a.price);
+                }
+                
+                setFilteredDoctors(filtered);
+            }, [doctors, searchQuery, filters, sortOption]);
+            
+            // Handle filter change
+            const handleFilterChange = (name, value) => {
+                setFilters({
+                    ...filters,
+                    [name]: value
+                });
+            };
+            
+            // Reset filters
+            const resetFilters = () => {
+                setFilters({
+                    specialty: 'all',
+                    minRating: 0,
+                    minExperience: 0,
+                    maxPrice: 3000
+                });
+                setSearchQuery('');
+                setSortOption('default');
+            };
+            
+            // Toggle filters panel
+            const toggleFilters = () => {
+                setShowFilters(!showFilters);
+            };
+            
+            // Handle doctor selection
+            const handleDoctorSelect = (doctor) => {
+                setSelectedDoctor(doctor);
+                setSelectedDate(null);
+                setSelectedTime(null);
+                setShowConfirmation(false);
+                setIsBooked(false);
+            };
+            
+            // Handle date selection
+            const handleDateSelect = (date) => {
+                setSelectedDate(date);
+                setSelectedTime(null);
+                setShowConfirmation(false);
+            };
+            
+            // Handle time selection
+            const handleTimeSelect = (time) => {
+                setSelectedTime(time);
+                setShowConfirmation(true);
+            };
+            
+            // Handle booking confirmation
+            const handleConfirmBooking = () => {
+                setIsBooked(true);
+            };
+            
+            // Go back to doctor list
+            const resetAll = () => {
+                setSelectedDoctor(null);
+                setSelectedDate(null);
+                setSelectedTime(null);
+                setShowConfirmation(false);
+                setIsBooked(false);
+            };
+            
+            // Doctor Card Component
+            const DoctorCard = ({ doctor }) => {
+                return (
+                    <div className="bg-white rounded-xl overflow-hidden shadow-lg p-6">
+                        <img src={doctor.image} alt={doctor.name} className="w-full h-48 object-cover rounded-lg mb-4" />
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{doctor.name}</h3>
+                        <p className="text-blue-600 mb-1">{doctor.specialty}</p>
+                        <p className="text-gray-600 text-sm mb-3">{doctor.qualification}</p>
+                        <div className="flex items-center mb-3">
+                            <span className="text-yellow-500 mr-1">★</span>
+                            <span className="text-gray-700">{doctor.rating} • {doctor.experience} years exp.</span>
+                        </div>
+                        <p className="text-green-600 font-bold mb-4">₹{doctor.price}</p>
+                        <button 
+                            onClick={() => handleDoctorSelect(doctor)}
+                            className="w-full py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition"
+                        >
+                            Book Appointment
+                        </button>
+                    </div>
+                );
+            };
+            
+            // Render date selection screen
+            const renderDateSelection = () => {
+                return (
+                    <div className="bg-white rounded-xl p-6 max-w-md mx-auto shadow-lg">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-800">Select Date</h2>
+                            <button 
+                                onClick={() => setSelectedDoctor(null)}
+                                className="text-pink-600 hover:text-pink-800 font-medium"
+                            >
+                                ← Back
+                            </button>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <h3 className="font-bold text-lg">{selectedDoctor.name}</h3>
+                            <p className="text-blue-600">{selectedDoctor.specialty}</p>
+                            <p className="text-green-600 font-bold mt-2">₹{selectedDoctor.price}</p>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <h4 className="font-medium text-gray-700 mb-2">Select a date:</h4>
+                            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                                {getAvailableDates().map(date => (
+                                    <button
+                                        key={date}
+                                        onClick={() => handleDateSelect(date)}
+                                        className="p-2 border rounded hover:bg-blue-50 hover:border-blue-300 text-sm"
+                                    >
+                                        {date}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+            
+            // Render time selection screen
+            const renderTimeSelection = () => {
+                return (
+                    <div className="bg-white rounded-xl p-6 max-w-md mx-auto shadow-lg">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-800">Select Time</h2>
+                            <button 
+                                onClick={() => setSelectedDate(null)}
+                                className="text-pink-600 hover:text-pink-800 font-medium"
+                            >
+                                ← Back
+                            </button>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <p className="text-gray-700 font-medium">Date: {selectedDate}</p>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <h4 className="font-medium text-gray-700 mb-2">Available time slots:</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                                {getTimeSlots().map(time => (
+                                    <button
+                                        key={time}
+                                        onClick={() => handleTimeSelect(time)}
+                                        className="p-2 border rounded hover:bg-pink-50 hover:border-pink-300 text-sm"
+                                    >
+                                        {time}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+            
+            // Render booking confirmation screen
+            const renderConfirmation = () => {
+                return (
+                    <div className="bg-white rounded-xl p-6 max-w-md mx-auto shadow-lg">
+                        <h2 className="text-xl font-bold mb-6 text-center text-gray-800">Appointment Summary</h2>
+                        
+                        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                            <h3 className="font-bold text-gray-800">{selectedDoctor.name}</h3>
+                            <p className="text-gray-600">{selectedDoctor.qualification}</p>
+                            <p className="text-blue-600 text-sm">{selectedDoctor.specialty}</p>
+                        </div>
+                        
+                        <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg">
+                            <div className="flex">
+                                <span className="w-32 text-gray-500 font-medium">Date:</span>
+                                <span className="font-medium">{selectedDate}</span>
+                            </div>
+                            <div className="flex">
+                                <span className="w-32 text-gray-500 font-medium">Time:</span>
+                                <span className="font-medium">{selectedTime}</span>
+                            </div>
+                            <div className="flex">
+                                <span className="w-32 text-gray-500 font-medium">Fee:</span>
+                                <span className="font-medium text-green-600">₹{selectedDoctor.price}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex space-x-4">
+                            <button 
+                                onClick={() => setShowConfirmation(false)}
+                                className="flex-1 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleConfirmBooking}
+                                className="flex-1 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                            >
+                                Confirm Appointment
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+            
+            // Render booking success screen
+            const renderBookingSuccess = () => {
+                return (
+                    <div className="bg-white border border-green-200 rounded-xl p-8 text-center shadow-lg max-w-md mx-auto">
+                        <div className="mb-4 flex justify-center">
+                            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+                                <span className="text-green-600 text-2xl">✓</span>
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold text-green-600 mb-3">Appointment Scheduled!</h2>
+                        <p className="text-lg mb-6 text-gray-700">
+                            Your appointment with {selectedDoctor.name} is confirmed for {selectedDate} at {selectedTime}.
+                        </p>
+                        <p className="text-gray-600 mb-8">
+                            A confirmation email will be sent to you shortly.
+                        </p>
+                        <button 
+                            onClick={resetAll} 
+                            className="bg-pink-600 text-white py-2 px-6 rounded-lg hover:bg-pink-700 transition"
+                        >
+                            Book Another Appointment
+                        </button>
+                    </div>
+                );
+            };
+
+            // Render filters panel
+            const renderFiltersPanel = () => {
+                return (
+                    <div className="bg-white p-6 rounded-xl shadow-md mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-800">Filters</h3>
+                            <button
+                                onClick={resetFilters}
+                                className="text-pink-600 hover:text-pink-700 text-sm font-medium"
+                            >
+                                Reset Filters
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Specialty Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Specialty
+                                </label>
+                                <select
+                                    value={filters.specialty}
+                                    onChange={(e) => handleFilterChange('specialty', e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                                >
+                                    {getSpecialties().map(specialty => (
+                                        <option key={specialty} value={specialty}>
+                                            {specialty === 'all' ? 'All Specialties' : specialty}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            {/* Rating Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Minimum Rating: {filters.minRating}+
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="5"
+                                    step="0.1"
+                                    value={filters.minRating}
+                                    onChange={(e) => handleFilterChange('minRating', parseFloat(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0</span>
+                                    <span>5</span>
+                                </div>
+                            </div>
+                            
+                            {/* Experience Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Minimum Experience: {filters.minExperience}+ years
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="20"
+                                    step="1"
+                                    value={filters.minExperience}
+                                    onChange={(e) => handleFilterChange('minExperience', parseInt(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0</span>
+                                    <span>20</span>
+                                </div>
+                            </div>
+                            
+                            {/* Price Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Maximum Price: ₹{filters.maxPrice}
+                                </label>
+                                <input
+                                    type="range"
+                                    min="1000"
+                                    max="3000"
+                                    step="100"
+                                    value={filters.maxPrice}
+                                    onChange={(e) => handleFilterChange('maxPrice', parseInt(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>₹1000</span>
+                                    <span>₹3000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // Render search and toolbar
+            const renderSearchAndToolbar = () => {
+                return (
+                    <div className="mb-8">
+                        <div className="flex flex-col md:flex-row gap-4 mb-6">
+                            <div className="flex-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span className="text-gray-400">🔍</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    placeholder="Search doctors by name or specialty..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                onClick={toggleFilters}
+                                className="flex items-center justify-center px-4 py-2 bg-pink-50 text-pink-600 rounded-lg border border-pink-200 hover:bg-pink-100 transition"
+                            >
+                                <span className="mr-2">🔍</span>
+                                <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+                            </button>
+                        </div>
+                        
+                        {showFilters && renderFiltersPanel()}
+                        
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-gray-800">Our Gynecologists ({filteredDoctors.length})</h2>
+                            <div className="flex bg-white rounded-lg overflow-hidden shadow-sm border">
+                                <button 
+                                    onClick={() => setSortOption('default')} 
+                                    className={`px-3 py-2 text-sm font-medium ${sortOption === 'default' ? 'text-pink-600 bg-pink-50 border-b-2 border-pink-600' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+                                >
+                                    ALL
+                                </button>
+                                <button 
+                                    onClick={() => setSortOption('rating')} 
+                                    className={`px-3 py-2 text-sm font-medium ${sortOption === 'rating' ? 'text-pink-600 bg-pink-50 border-b-2 border-pink-600' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+                                >
+                                    Top Rated
+                                </button>
+                                <button 
+                                    onClick={() => setSortOption('experience')} 
+                                    className={`px-3 py-2 text-sm font-medium ${sortOption === 'experience' ? 'text-pink-600 bg-pink-50 border-b-2 border-pink-600' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+                                >
+                                    Experience
+                                </button>
+                                <button 
+                                    onClick={() => setSortOption('price_low')} 
+                                    className={`px-3 py-2 text-sm font-medium ${sortOption === 'price_low' ? 'text-pink-600 bg-pink-50 border-b-2 border-pink-600' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+                                >
+                                    Price ↓
+                                </button>
+                                <button 
+                                    onClick={() => setSortOption('price_high')} 
+                                    className={`px-3 py-2 text-sm font-medium ${sortOption === 'price_high' ? 'text-pink-600 bg-pink-50 border-b-2 border-pink-600' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+                                >
+                                    Price ↑
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+            
+            // Main render
+            return (
+                <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+                    <header className="text-center mb-12">
+                        <h1 className="text-4xl font-bold text-pink-600 mb-2">WomanCare</h1>
+                        <p className="text-lg text-gray-600">Connect with top gynecologists across India</p>
+                    </header>
+                    
+                    {isBooked ? (
+                        renderBookingSuccess()
+                    ) : selectedDoctor && selectedDate && selectedTime && showConfirmation ? (
+                        renderConfirmation()
+                    ) : selectedDoctor && selectedDate ? (
+                        renderTimeSelection()
+                    ) : selectedDoctor ? (
+                        renderDateSelection()
+                    ) : (
+                        <>
+                            {renderSearchAndToolbar()}
+                            
+                            {filteredDoctors.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {filteredDoctors.map(doctor => (
+                                        <DoctorCard key={doctor.id} doctor={doctor} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center p-12 bg-white rounded-xl shadow">
+                                    <h3 className="text-xl font-bold text-gray-700 mb-2">No doctors found</h3>
+                                    <p className="text-gray-500 mb-6">Try adjusting your search criteria</p>
+                                    <button 
+                                        onClick={resetFilters} 
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
