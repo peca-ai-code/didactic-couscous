@@ -82,7 +82,7 @@ A secure, privacy-focused AI-powered chatbot providing gynecological health info
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/gynecology-chatbot.git
+git clone https://github.com/peca-ai-code/didactic-couscous.git
 cd gynecology-chatbot
 ```
 
