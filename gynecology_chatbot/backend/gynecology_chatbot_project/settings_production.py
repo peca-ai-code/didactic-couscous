@@ -1,3 +1,4 @@
+#backend/gynecology_chatbot_project/settings_production.py
 import os
 import environ
 from google.oauth2 import service_account
@@ -67,6 +68,9 @@ CORS_ALLOWED_ORIGINS = [
 # Add your Chainlit Cloud Run URL here after deployment
 if os.environ.get('CHAINLIT_URL'):
     CORS_ALLOWED_ORIGINS.append(os.environ.get('CHAINLIT_URL'))
+
+# Frontend URL for production redirects
+FRONTEND_URL = os.getenv('FRONTEND_URL', os.getenv('CHAINLIT_URL', 'http://localhost:8001'))
 
 # Logging Configuration
 LOGGING = {
