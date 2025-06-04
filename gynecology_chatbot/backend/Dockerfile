@@ -34,5 +34,5 @@ USER appuser
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 --preload gynecology_chatbot_project.wsgi:application
+# Use startup script that runs migrations
+CMD ["./startup.sh"]

@@ -1,11 +1,15 @@
+#backend/gynecology_chatbot_project/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from utils.views import health_check, redirect_to_admin
 
 urlpatterns = [
-    # Redirect root to admin
-    path('', redirect_to_admin),
+    # # Redirect root to admin
+    # path('', redirect_to_admin),
+
+    # Landing page at root
+    path('', include('landing.urls')),
     
     # Admin site
     path('admin/', admin.site.urls),
