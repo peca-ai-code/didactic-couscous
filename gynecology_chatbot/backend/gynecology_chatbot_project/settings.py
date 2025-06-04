@@ -1,3 +1,4 @@
+#backend/gynecology_chatbot_project/settings.py
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.chatbot',
     'appointments',
+    'landing',
 ]
 
 MIDDLEWARE = [
